@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <map>
 #include <set>
 #include <stack>
 #include <string>
@@ -20,7 +21,6 @@ class Regex {
   Regex(std::string _re) : rexp(_re) {}
 
   void compile() {
-    std::cout << rexp << std::endl;
     polish = parseRe(rexp);
     nfa = new NFA();
     start = nfa->getNFA(polish);
@@ -30,6 +30,7 @@ class Regex {
   State* getNFAState() { return start; }
 
   bool match(std::string s) { return nfa->match(start, s); }
+  std::map<int, int> matchAll(std::string txt);  // return {start: sizeOfMatch}
 
  private:
   std::string rexp;
@@ -40,6 +41,23 @@ class Regex {
   //   std::set<char> metaChars{'?', '.', '|', ')', '(', '+', '*',
   //                            '{', '}', '[', '[', '~', '^'};
 };
+
+std::map<int, int> Regex::matchAll(std::string str) {
+  std::map<int, int> ans;
+
+  for (size_t k = 0; k < str.length(); k++) {
+    for (size_t len = str.length() - k; len > 0; len--) {
+      std::string subStr = str.substr(k, len);
+      if (match(subStr)) {
+        // cout << str << " : " << subStr << endl;
+        ans[k] = std::max((size_t)ans[k], len);
+        // break;
+      }
+    }
+  }
+
+  return ans;
+}
 
 std::vector<int> Regex::parseRe(std::string re) {
   int nofAlternations = 0;
